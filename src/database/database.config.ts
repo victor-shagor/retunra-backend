@@ -1,5 +1,6 @@
 import { DataSourceOptions } from 'typeorm';
 import { User } from '../users/entities/user.entity';
+import { CreateUsersTable1781395200000 } from './migrations/1781395200000-CreateUsersTable';
 
 export function getDatabaseOptions(): DataSourceOptions {
   const databaseUrl = process.env.DATABASE_URL;
@@ -18,7 +19,7 @@ export function getDatabaseOptions(): DataSourceOptions {
   return {
     ...connection,
     entities: [User],
-    migrations: [`${__dirname}/migrations/*.{js,ts}`],
+    migrations: [CreateUsersTable1781395200000],
     synchronize: false,
     ssl: databaseUrl ? { rejectUnauthorized: false } : false,
   };

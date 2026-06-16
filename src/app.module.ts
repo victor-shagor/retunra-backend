@@ -23,6 +23,7 @@ import { RedisModule } from './redis/redis.module';
         return {
           ...getDatabaseOptions(),
           synchronize: !isProduction,
+          migrationsRun: isProduction,
         };
       },
     }),

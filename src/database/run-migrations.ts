@@ -1,13 +1,32 @@
-import dataSource from './data-source';
+import { config } from 'dotenv';
+import { DataSource } from 'typeorm';
+import { getDatabaseOptions } from './database.config';
 
-async function runMigrations(): Promise<void> {
+config();
+
+export async function runMigrations(): Promise<void> {
+  if (!process.env.DATABASE_URL) {
+    throw new Error(
+      'DATABASE_URL is not set. Add your Neon connection string before running migrations.',
+    );
+  }
+
+  const dataSource = new DataSource(getDatabaseOptions());
+
   await dataSource.initialize();
-  await dataSource.runMigrations();
+
+  const executed = await dataSource.runMigrations();
+
   await dataSource.destroy();
+
+  if (executed.length === 0) {
+    console.log('No pending migrations.');
+    return;
+  }
+
+  for (const migration of executed) {
+    console.log(`Applied migration: ${migration.name}`);
+  }
+
   console.log('Migrations completed.');
 }
-
-runMigrations().catch((error: unknown) => {
-  console.error('Migration failed:', error);
-  process.exit(1);
-});
