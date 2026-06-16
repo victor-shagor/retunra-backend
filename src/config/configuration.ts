@@ -10,6 +10,8 @@ export default () => ({
     name: process.env.DB_NAME ?? 'retunra',
   },
   redis: {
+    restUrl: process.env.UPSTASH_REDIS_REST_URL,
+    restToken: process.env.UPSTASH_REDIS_REST_TOKEN,
     url: process.env.REDIS_URL ?? process.env.UPSTASH_REDIS_URL,
     host: process.env.REDIS_HOST ?? 'localhost',
     port: parseInt(process.env.REDIS_PORT ?? '6379', 10),
