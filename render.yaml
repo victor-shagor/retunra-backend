@@ -1,0 +1,20 @@
+services:
+  - type: web
+    name: retunra-backend
+    runtime: node
+    plan: free
+    buildCommand: npm install && npm run build
+    preDeployCommand: npm run db:migrate:prod
+    startCommand: npm run start:prod
+    healthCheckPath: /health
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: JWT_SECRET
+        generateValue: true
+      # Copy from Neon dashboard (use the pooled connection string for Render).
+      - key: DATABASE_URL
+        sync: false
+      # Copy from Upstash dashboard (TLS / rediss:// URL).
+      - key: REDIS_URL
+        sync: false
