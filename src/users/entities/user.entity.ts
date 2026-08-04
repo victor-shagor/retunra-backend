@@ -14,19 +14,19 @@ export class User {
   @Column({ name: 'full_name' })
   fullName: string;
 
-  @Column({ unique: true, nullable: true })
+  @Column({ type: 'varchar', unique: true, nullable: true })
   phone: string | null;
 
-  @Column({ unique: true })
+  @Column({ type: 'varchar', unique: true })
   email: string;
 
-  @Column({ select: false, nullable: true })
+  @Column({ type: 'varchar', select: false, nullable: true })
   password: string | null;
 
-  @Column({ name: 'google_id', unique: true, nullable: true })
+  @Column({ type: 'varchar', name: 'google_id', unique: true, nullable: true })
   googleId: string | null;
 
-  @Column({ name: 'facebook_id', unique: true, nullable: true })
+  @Column({ type: 'varchar', name: 'facebook_id', unique: true, nullable: true })
   facebookId: string | null;
 
   @CreateDateColumn({ name: 'created_at' })
