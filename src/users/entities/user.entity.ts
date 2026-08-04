@@ -14,14 +14,20 @@ export class User {
   @Column({ name: 'full_name' })
   fullName: string;
 
-  @Column({ unique: true })
-  phone: string;
+  @Column({ unique: true, nullable: true })
+  phone: string | null;
 
   @Column({ unique: true })
   email: string;
 
-  @Column({ select: false })
-  password: string;
+  @Column({ select: false, nullable: true })
+  password: string | null;
+
+  @Column({ name: 'google_id', unique: true, nullable: true })
+  googleId: string | null;
+
+  @Column({ name: 'facebook_id', unique: true, nullable: true })
+  facebookId: string | null;
 
   @CreateDateColumn({ name: 'created_at' })
   createdAt: Date;

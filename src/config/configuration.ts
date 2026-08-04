@@ -1,6 +1,11 @@
 export default () => ({
   port: parseInt(process.env.PORT ?? '3000', 10),
   nodeEnv: process.env.NODE_ENV ?? 'development',
+  cloudinary: {
+    cloudName: process.env.CLOUDINARY_CLOUD_NAME,
+    apiKey: process.env.CLOUDINARY_API_KEY,
+    apiSecret: process.env.CLOUDINARY_API_SECRET,
+  },
   database: {
     url: process.env.DATABASE_URL,
     host: process.env.DB_HOST ?? 'localhost',
@@ -27,5 +32,22 @@ export default () => ({
       process.env.JWT_REFRESH_EXPIRES_IN_SECONDS ?? '604800',
       10,
     ),
+  },
+  google: {
+    clientId: process.env.GOOGLE_CLIENT_ID,
+    clientSecret: process.env.GOOGLE_CLIENT_SECRET,
+    callbackUrl:
+      process.env.GOOGLE_CALLBACK_URL ??
+      'http://localhost:7500/auth/google/callback',
+  },
+  facebook: {
+    clientId: process.env.FACEBOOK_APP_ID,
+    clientSecret: process.env.FACEBOOK_APP_SECRET,
+    callbackUrl:
+      process.env.FACEBOOK_CALLBACK_URL ??
+      'http://localhost:7500/auth/facebook/callback',
+  },
+  frontend: {
+    url: process.env.FRONTEND_URL ?? 'http://localhost:5173',
   },
 });

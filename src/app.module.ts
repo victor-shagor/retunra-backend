@@ -5,6 +5,7 @@ import { AuthModule } from './auth/auth.module';
 import configuration from './config/configuration';
 import { getDatabaseOptions } from './database/database.config';
 import { HealthModule } from './health/health.module';
+import { ListingsModule } from './listings/listings.module';
 import { RedisModule } from './redis/redis.module';
 
 @Module({
@@ -30,6 +31,7 @@ import { RedisModule } from './redis/redis.module';
     RedisModule,
     AuthModule,
     HealthModule,
+    ListingsModule,
   ],
 })
 export class AppModule {}

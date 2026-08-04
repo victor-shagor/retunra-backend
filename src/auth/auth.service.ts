@@ -9,7 +9,7 @@ import * as bcrypt from 'bcrypt';
 import { randomUUID } from 'crypto';
 import { RedisService } from '../redis/redis.service';
 import { User } from '../users/entities/user.entity';
-import { UsersService } from '../users/users.service';
+import { OAuthProfile, UsersService } from '../users/users.service';
 import { LoginDto } from './dto/login.dto';
 import { SignupDto } from './dto/signup.dto';
 
@@ -22,7 +22,7 @@ export interface AuthResponse extends AuthTokens {
   user: {
     id: string;
     fullName: string;
-    phone: string;
+    phone: string | null;
     email: string;
   };
 }
@@ -68,6 +68,10 @@ export class AuthService {
       throw new UnauthorizedException('Invalid credentials');
     }
 
+    if (!user.password) {
+      throw new UnauthorizedException('Invalid credentials');
+    }
+
     const passwordMatches = await bcrypt.compare(dto.password, user.password);
 
     if (!passwordMatches) {
@@ -87,6 +91,14 @@ export class AuthService {
     }
 
     return null;
+  }
+
+  async validateOAuthUser(profile: OAuthProfile): Promise<User> {
+    return this.usersService.findOrCreateOAuthUser(profile);
+  }
+
+  async loginWithUser(user: User): Promise<AuthResponse> {
+    return this.buildAuthResponse(user);
   }
 
   private async buildAuthResponse(user: User): Promise<AuthResponse> {
