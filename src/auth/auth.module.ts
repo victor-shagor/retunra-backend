@@ -6,7 +6,9 @@ import { UsersModule } from '../users/users.module';
 import { AuthController } from './auth.controller';
 import { AuthService } from './auth.service';
 import { FacebookAuthGuard } from './guards/facebook-auth.guard';
+import { FacebookCallbackGuard } from './guards/facebook-callback.guard';
 import { GoogleAuthGuard } from './guards/google-auth.guard';
+import { GoogleCallbackGuard } from './guards/google-callback.guard';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
 import { FacebookStrategy } from './strategies/facebook.strategy';
 import { GoogleStrategy } from './strategies/google.strategy';
@@ -36,8 +38,10 @@ import { JwtStrategy } from './strategies/jwt.strategy';
     JwtAuthGuard,
     GoogleStrategy,
     GoogleAuthGuard,
+    GoogleCallbackGuard,
     FacebookStrategy,
     FacebookAuthGuard,
+    FacebookCallbackGuard,
   ],
   exports: [JwtAuthGuard, JwtStrategy],
 })
