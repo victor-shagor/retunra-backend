@@ -2,9 +2,18 @@ import { ForbiddenException, Injectable, NotFoundException } from '@nestjs/commo
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { UploadService } from '../upload/upload.service';
+import { BrowseListingsDto, BrowseSort } from './dto/browse-listings.dto';
 import { CreateListingDto } from './dto/create-listing.dto';
 import { UpdateListingDto } from './dto/update-listing.dto';
 import { Listing, ListingStatus } from './entities/listing.entity';
+
+export interface BrowseResult {
+  data: Listing[];
+  total: number;
+  page: number;
+  limit: number;
+  totalPages: number;
+}
 
 @Injectable()
 export class ListingsService {
@@ -31,6 +40,63 @@ export class ListingsService {
     });
 
     return this.listingsRepository.save(listing);
+  }
+
+  async browse(dto: BrowseListingsDto): Promise<BrowseResult> {
+    const page = dto.page ?? 1;
+    const limit = dto.limit ?? 20;
+
+    const qb = this.listingsRepository
+      .createQueryBuilder('listing')
+      .where('listing.status = :status', { status: ListingStatus.PUBLISHED });
+
+    if (dto.q) {
+      qb.andWhere(
+        '(listing.title ILIKE :q OR listing.description ILIKE :q)',
+        { q: `%${dto.q}%` },
+      );
+    }
+    if (dto.category) {
+      qb.andWhere('listing.category = :category', { category: dto.category });
+    }
+    if (dto.subcategory) {
+      qb.andWhere('listing.subcategory ILIKE :subcategory', {
+        subcategory: `%${dto.subcategory}%`,
+      });
+    }
+    if (dto.condition) {
+      qb.andWhere('listing.condition = :condition', { condition: dto.condition });
+    }
+    if (dto.negotiable !== undefined) {
+      qb.andWhere('listing.negotiable = :negotiable', { negotiable: dto.negotiable });
+    }
+    if (dto.minPrice !== undefined) {
+      qb.andWhere('listing.price >= :minPrice', { minPrice: dto.minPrice });
+    }
+    if (dto.maxPrice !== undefined) {
+      qb.andWhere('listing.price <= :maxPrice', { maxPrice: dto.maxPrice });
+    }
+
+    switch (dto.sort) {
+      case BrowseSort.PRICE_ASC:
+        qb.orderBy('listing.price', 'ASC');
+        break;
+      case BrowseSort.PRICE_DESC:
+        qb.orderBy('listing.price', 'DESC');
+        break;
+      case BrowseSort.OLDEST:
+        qb.orderBy('listing.createdAt', 'ASC');
+        break;
+      default:
+        qb.orderBy('listing.createdAt', 'DESC');
+    }
+
+    const [data, total] = await qb
+      .skip((page - 1) * limit)
+      .take(limit)
+      .getManyAndCount();
+
+    return { data, total, page, limit, totalPages: Math.ceil(total / limit) };
   }
 
   findAllByUser(userId: string): Promise<Listing[]> {

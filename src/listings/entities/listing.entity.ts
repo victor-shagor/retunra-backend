@@ -20,16 +20,20 @@ export enum ListingGender {
 }
 
 export enum ListingCondition {
+  NEW_TAGS = 'new_tags',
   NEW = 'new',
-  USED = 'used',
+  LIKE_NEW = 'like_new',
+  VERY_GOOD = 'very_good',
+  GOOD = 'good',
+  SATISFACTORY = 'satisfactory',
 }
 
 export enum ListingCategory {
-  CLOTHING = 'clothing',
-  SHOES = 'shoes',
-  BASICS = 'basics',
-  ACCESSORIES = 'accessories',
-  HAIR = 'hair',
+  CLOTHING = 'Clothing',
+  SHOES = 'Shoes',
+  ACCESSORIES = 'Accessories',
+  BAGS = 'Bags',
+  HAIR = 'Hair',
 }
 
 @Entity('listings')
@@ -46,6 +50,9 @@ export class Listing {
   @Column({ type: 'enum', enum: ListingCategory, nullable: true })
   category: ListingCategory | null;
 
+  @Column({ type: 'varchar', nullable: true })
+  subcategory: string | null;
+
   @Column({ type: 'enum', enum: ListingGender, nullable: true })
   gender: ListingGender | null;
 
@@ -54,6 +61,9 @@ export class Listing {
 
   @Column({ type: 'numeric', precision: 10, scale: 2 })
   price: number;
+
+  @Column({ type: 'boolean', default: true })
+  negotiable: boolean;
 
   @Column({
     type: 'enum',

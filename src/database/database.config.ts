@@ -4,6 +4,7 @@ import { User } from '../users/entities/user.entity';
 import { CreateUsersTable1781395200000 } from './migrations/1781395200000-CreateUsersTable';
 import { CreateListingsTable1781395200001 } from './migrations/1781395200001-CreateListingsTable';
 import { AddOAuthColumnsToUsers1781395200002 } from './migrations/1781395200002-AddOAuthColumnsToUsers';
+import { UpdateListingFields1781395200003 } from './migrations/1781395200003-UpdateListingFields';
 
 export function getDatabaseOptions(): DataSourceOptions {
   const databaseUrl = process.env.DATABASE_URL;
@@ -22,7 +23,7 @@ export function getDatabaseOptions(): DataSourceOptions {
   return {
     ...connection,
     entities: [User, Listing],
-    migrations: [CreateUsersTable1781395200000, CreateListingsTable1781395200001, AddOAuthColumnsToUsers1781395200002],
+    migrations: [CreateUsersTable1781395200000, CreateListingsTable1781395200001, AddOAuthColumnsToUsers1781395200002, UpdateListingFields1781395200003],
     synchronize: false,
     ssl: databaseUrl ? { rejectUnauthorized: false } : false,
   };

@@ -8,6 +8,7 @@ import {
   Param,
   Patch,
   Post,
+  Query,
   Request,
   UploadedFiles,
   UseGuards,
@@ -15,16 +16,27 @@ import {
 } from '@nestjs/common';
 import { FilesInterceptor } from '@nestjs/platform-express';
 import { memoryStorage } from 'multer';
+import { Public } from '../auth/decorators/public.decorator';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { BrowseListingsDto } from './dto/browse-listings.dto';
 import { CreateListingDto } from './dto/create-listing.dto';
 import { UpdateListingDto } from './dto/update-listing.dto';
-import { ListingsService } from './listings.service';
+import { BrowseResult, ListingsService } from './listings.service';
 
 @UseGuards(JwtAuthGuard)
 @Controller('listings')
 export class ListingsController {
   constructor(private readonly listingsService: ListingsService) {}
 
+  // ── Public browse ────────────────────────────────────────────────────────
+  // Must be declared before @Get(':id') so 'browse' is not captured as a param
+  @Get('browse')
+  @Public()
+  browse(@Query() dto: BrowseListingsDto): Promise<BrowseResult> {
+    return this.listingsService.browse(dto);
+  }
+
+  // ── Seller (auth required) ───────────────────────────────────────────────
   @Post()
   @UseInterceptors(
     FilesInterceptor('images', 10, { storage: memoryStorage() }),

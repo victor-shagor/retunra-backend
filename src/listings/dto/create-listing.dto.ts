@@ -1,5 +1,6 @@
 import { Transform } from 'class-transformer';
 import {
+  IsBoolean,
   IsEnum,
   IsNotEmpty,
   IsNumber,
@@ -27,6 +28,10 @@ export class CreateListingDto {
   @IsOptional()
   category?: ListingCategory;
 
+  @IsString()
+  @IsOptional()
+  subcategory?: string;
+
   @IsEnum(ListingGender)
   @IsOptional()
   gender?: ListingGender;
@@ -39,6 +44,11 @@ export class CreateListingDto {
   @IsNumber({ maxDecimalPlaces: 2 })
   @Min(0)
   price: number;
+
+  @Transform(({ value }) => value === 'true' || value === true)
+  @IsBoolean()
+  @IsOptional()
+  negotiable?: boolean;
 
   @IsEnum(ListingStatus)
   @IsOptional()
