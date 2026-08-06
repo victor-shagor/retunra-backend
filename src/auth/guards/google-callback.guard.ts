@@ -7,8 +7,10 @@ export class GoogleCallbackGuard extends AuthGuard('google') {
     try {
       return (await super.canActivate(context)) as boolean;
     } catch (err: any) {
-      context.switchToHttp().getRequest().oauthError =
-        err?.message ?? 'Google authentication failed';
+      const req = context.switchToHttp().getRequest();
+      if (!req.user) {
+        req.oauthError = err?.message ?? 'Google authentication failed';
+      }
       return true;
     }
   }
@@ -19,7 +21,9 @@ export class GoogleCallbackGuard extends AuthGuard('google') {
     info: any,
     context: ExecutionContext,
   ): TUser {
-    if (err || !user) {
+    // Only treat as failure when there is no user — a non-null err alongside
+    // a valid user can occur in some OAuth flows and must not block login
+    if (!user) {
       context.switchToHttp().getRequest().oauthError =
         err?.message ?? info?.message ?? 'Google authentication failed';
     }

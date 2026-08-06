@@ -11,19 +11,16 @@ import {
   Query,
   Request,
   UploadedFiles,
-  UseGuards,
   UseInterceptors,
 } from '@nestjs/common';
 import { FilesInterceptor } from '@nestjs/platform-express';
 import { memoryStorage } from 'multer';
 import { Public } from '../auth/decorators/public.decorator';
-import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { BrowseListingsDto } from './dto/browse-listings.dto';
 import { CreateListingDto } from './dto/create-listing.dto';
 import { UpdateListingDto } from './dto/update-listing.dto';
 import { BrowseResult, ListingsService } from './listings.service';
 
-@UseGuards(JwtAuthGuard)
 @Controller('listings')
 export class ListingsController {
   constructor(private readonly listingsService: ListingsService) {}
@@ -54,12 +51,16 @@ export class ListingsController {
     return this.listingsService.findAllByUser(req.user.id);
   }
 
+  @Get('user/:userId')
+  @Public()
+  findByUser(@Param('userId') userId: string) {
+    return this.listingsService.findPublishedByUser(userId);
+  }
+
   @Get(':id')
-  findOne(
-    @Param('id') id: string,
-    @Request() req: { user: { id: string } },
-  ) {
-    return this.listingsService.findOne(id, req.user.id);
+  @Public()
+  findOne(@Param('id') id: string) {
+    return this.listingsService.findOne(id);
   }
 
   @Patch(':id')

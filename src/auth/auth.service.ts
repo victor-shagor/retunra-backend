@@ -93,6 +93,32 @@ export class AuthService {
     return null;
   }
 
+  async refresh(refreshToken: string): Promise<AuthTokens> {
+    let payload: { sub: string; jti: string };
+
+    try {
+      payload = await this.jwtService.verifyAsync(refreshToken, {
+        secret: this.configService.getOrThrow<string>('jwt.secret'),
+      });
+    } catch {
+      throw new UnauthorizedException('Invalid refresh token');
+    }
+
+    if (!payload.jti) {
+      throw new UnauthorizedException('Invalid refresh token');
+    }
+
+    const key = this.refreshTokenKey(payload.sub, payload.jti);
+    const stored = await this.redisService.get(key);
+
+    if (!stored) {
+      throw new UnauthorizedException('Refresh token has been revoked or expired');
+    }
+
+    await this.redisService.del(key);
+    return this.issueTokens(payload.sub);
+  }
+
   async validateOAuthUser(profile: OAuthProfile): Promise<User> {
     return this.usersService.findOrCreateOAuthUser(profile);
   }

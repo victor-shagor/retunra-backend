@@ -12,14 +12,17 @@ import {
 import { ConfigService } from '@nestjs/config';
 import type { Request, Response } from 'express';
 import { User } from '../users/entities/user.entity';
-import { AuthResponse, AuthService } from './auth.service';
+import { AuthResponse, AuthService, AuthTokens } from './auth.service';
+import { Public } from './decorators/public.decorator';
 import { LoginDto } from './dto/login.dto';
+import { RefreshDto } from './dto/refresh.dto';
 import { SignupDto } from './dto/signup.dto';
 import { FacebookAuthGuard } from './guards/facebook-auth.guard';
 import { FacebookCallbackGuard } from './guards/facebook-callback.guard';
 import { GoogleAuthGuard } from './guards/google-auth.guard';
 import { GoogleCallbackGuard } from './guards/google-callback.guard';
 
+@Public()
 @Controller('auth')
 export class AuthController {
   constructor(
@@ -38,6 +41,12 @@ export class AuthController {
     return this.authService.login(dto);
   }
 
+  @Post('refresh')
+  @HttpCode(HttpStatus.OK)
+  refresh(@Body() dto: RefreshDto): Promise<AuthTokens> {
+    return this.authService.refresh(dto.refreshToken);
+  }
+
   @Get('google')
   @UseGuards(GoogleAuthGuard)
   googleLogin(): void {}
@@ -48,7 +57,7 @@ export class AuthController {
     @Req() req: Request & { user: User; oauthError?: string },
     @Res() res: Response,
   ): Promise<void> {
-    if (req.oauthError || !req.user) {
+    if (!req.user) {
       return res.redirect(this.buildErrorUrl(req.oauthError));
     }
     const authResponse = await this.authService.loginWithUser(req.user);
@@ -65,7 +74,7 @@ export class AuthController {
     @Req() req: Request & { user: User; oauthError?: string },
     @Res() res: Response,
   ): Promise<void> {
-    if (req.oauthError || !req.user) {
+    if (!req.user) {
       return res.redirect(this.buildErrorUrl(req.oauthError));
     }
     const authResponse = await this.authService.loginWithUser(req.user);
@@ -77,6 +86,9 @@ export class AuthController {
     const params = new URLSearchParams({
       accessToken: authResponse.accessToken,
       refreshToken: authResponse.refreshToken,
+      id: authResponse.user.id,
+      fullName: authResponse.user.fullName,
+      email: authResponse.user.email ?? '',
     });
     return `${frontendUrl}/auth/callback?${params.toString()}`;
   }

@@ -106,9 +106,21 @@ export class ListingsService {
     });
   }
 
-  async findOne(id: string, userId: string): Promise<Listing> {
+  findPublishedByUser(userId: string): Promise<Listing[]> {
+    return this.listingsRepository.find({
+      where: { userId, status: ListingStatus.PUBLISHED },
+      order: { createdAt: 'DESC' },
+    });
+  }
+
+  async findOne(id: string): Promise<Listing> {
     const listing = await this.listingsRepository.findOne({ where: { id } });
     if (!listing) throw new NotFoundException('Listing not found');
+    return listing;
+  }
+
+  async findOneOwned(id: string, userId: string): Promise<Listing> {
+    const listing = await this.findOne(id);
     if (listing.userId !== userId) throw new ForbiddenException();
     return listing;
   }
@@ -119,7 +131,7 @@ export class ListingsService {
     dto: UpdateListingDto,
     files: Express.Multer.File[],
   ): Promise<Listing> {
-    const listing = await this.findOne(id, userId);
+    const listing = await this.findOneOwned(id, userId);
 
     const newImageUrls = files.length
       ? await this.uploadService.uploadImages(files)
@@ -134,7 +146,7 @@ export class ListingsService {
   }
 
   async remove(id: string, userId: string): Promise<void> {
-    const listing = await this.findOne(id, userId);
+    const listing = await this.findOneOwned(id, userId);
     await this.listingsRepository.remove(listing);
   }
 }
