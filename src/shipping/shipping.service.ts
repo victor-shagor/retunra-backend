@@ -51,7 +51,7 @@ export class ShippingService {
       ],
     };
 
-    const authHeader = `Token ${apiKey}`;
+    const authHeader = `Bearer ${apiKey}`;
     this.logger.log(`Calling Shipbubble → receiver: ${dto.receiver.city}, ${dto.receiver.state}, auth header length: ${authHeader.length}`);
 
     let res: Response;
