@@ -29,6 +29,9 @@ export class User {
   @Column({ type: 'varchar', name: 'facebook_id', unique: true, nullable: true })
   facebookId: string | null;
 
+  @Column({ name: 'store_name', type: 'varchar', nullable: true })
+  storeName: string | null;
+
   @CreateDateColumn({ name: 'created_at' })
   createdAt: Date;
 

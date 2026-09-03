@@ -18,7 +18,8 @@ export class UsersService {
   ) {}
 
   create(data: Pick<User, 'fullName' | 'phone' | 'email' | 'password'>): Promise<User> {
-    const user = this.usersRepository.create(data);
+    const firstName = data.fullName.split(' ')[0];
+    const user = this.usersRepository.create({ ...data, storeName: `${firstName}'s Closet` });
     return this.usersRepository.save(user);
   }
 
@@ -38,11 +39,13 @@ export class UsersService {
     }
 
     try {
+      const firstName = profile.fullName.split(' ')[0];
       const user = this.usersRepository.create({
         fullName: profile.fullName,
         email,
         phone: null,
         password: null,
+        storeName: `${firstName}'s Closet`,
         googleId: profile.provider === 'google' ? profile.providerId : null,
         facebookId: profile.provider === 'facebook' ? profile.providerId : null,
       });

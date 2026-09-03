@@ -1,6 +1,6 @@
 import { ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { Not, Repository } from 'typeorm';
 import { UploadService } from '../upload/upload.service';
 import { BrowseListingsDto, BrowseSort } from './dto/browse-listings.dto';
 import { CreateListingDto } from './dto/create-listing.dto';
@@ -114,9 +114,29 @@ export class ListingsService {
   }
 
   async findOne(id: string): Promise<Listing> {
-    const listing = await this.listingsRepository.findOne({ where: { id } });
+    const listing = await this.listingsRepository.findOne({ where: { id }, relations: { user: true } });
     if (!listing) throw new NotFoundException('Listing not found');
     return listing;
+  }
+
+  async findMoreFromSeller(listingId: string, limit = 8): Promise<Listing[]> {
+    const listing = await this.listingsRepository.findOne({ where: { id: listingId } });
+    if (!listing) return [];
+    return this.listingsRepository.find({
+      where: { userId: listing.userId, status: ListingStatus.PUBLISHED, id: Not(listingId) },
+      order: { createdAt: 'DESC' },
+      take: limit,
+    });
+  }
+
+  async findSimilar(listingId: string, limit = 8): Promise<Listing[]> {
+    const listing = await this.listingsRepository.findOne({ where: { id: listingId } });
+    if (!listing || !listing.category) return [];
+    return this.listingsRepository.find({
+      where: { category: listing.category, status: ListingStatus.PUBLISHED, id: Not(listingId) },
+      order: { createdAt: 'DESC' },
+      take: limit,
+    });
   }
 
   async findOneOwned(id: string, userId: string): Promise<Listing> {

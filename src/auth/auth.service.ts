@@ -22,6 +22,7 @@ export interface AuthResponse extends AuthTokens {
   user: {
     id: string;
     fullName: string;
+    storeName: string | null;
     phone: string | null;
     email: string;
   };
@@ -135,6 +136,7 @@ export class AuthService {
       user: {
         id: user.id,
         fullName: user.fullName,
+        storeName: user.storeName,
         phone: user.phone,
         email: user.email,
       },

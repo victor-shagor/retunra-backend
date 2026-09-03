@@ -57,6 +57,18 @@ export class ListingsController {
     return this.listingsService.findPublishedByUser(userId);
   }
 
+  @Get(':id/more-from-seller')
+  @Public()
+  moreFromSeller(@Param('id') id: string) {
+    return this.listingsService.findMoreFromSeller(id);
+  }
+
+  @Get(':id/similar')
+  @Public()
+  similar(@Param('id') id: string) {
+    return this.listingsService.findSimilar(id);
+  }
+
   @Get(':id')
   @Public()
   findOne(@Param('id') id: string) {
