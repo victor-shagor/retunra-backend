@@ -1,4 +1,4 @@
-import { Type } from 'class-transformer';
+import { Transform, Type } from 'class-transformer';
 import { IsNotEmpty, IsNumber, IsString, ValidateNested } from 'class-validator';
 
 export class ReceiverDto {
@@ -32,6 +32,7 @@ export class FetchRatesDto {
   @IsNotEmpty()
   itemName: string;
 
+  @Transform(({ value }) => Number(value))
   @IsNumber()
   itemPrice: number;
 }
