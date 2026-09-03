@@ -72,7 +72,7 @@ export class ListingsController {
   @Get(':id')
   @Public()
   findOne(@Param('id') id: string) {
-    return this.listingsService.findOne(id);
+    return this.listingsService.findOneDetail(id);
   }
 
   @Patch(':id')

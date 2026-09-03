@@ -114,9 +114,27 @@ export class ListingsService {
   }
 
   async findOne(id: string): Promise<Listing> {
-    const listing = await this.listingsRepository.findOne({ where: { id }, relations: { user: true } });
+    const listing = await this.listingsRepository.findOne({ where: { id } });
     if (!listing) throw new NotFoundException('Listing not found');
     return listing;
+  }
+
+  async findOneDetail(id: string) {
+    const listing = await this.listingsRepository
+      .createQueryBuilder('listing')
+      .leftJoin('listing.user', 'u')
+      .addSelect(['u.storeName', 'u.fullName'])
+      .where('listing.id = :id', { id })
+      .getOne();
+
+    if (!listing) throw new NotFoundException('Listing not found');
+
+    const { user, ...rest } = listing as any;
+    return {
+      ...rest,
+      storeName: (user?.storeName as string | null) ?? null,
+      sellerName: (user?.fullName as string | null) ?? null,
+    };
   }
 
   async findMoreFromSeller(listingId: string, limit = 8): Promise<Listing[]> {

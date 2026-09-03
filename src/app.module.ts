@@ -9,6 +9,7 @@ import { getDatabaseOptions } from './database/database.config';
 import { HealthModule } from './health/health.module';
 import { ListingsModule } from './listings/listings.module';
 import { RedisModule } from './redis/redis.module';
+import { ShippingModule } from './shipping/shipping.module';
 
 @Module({
   imports: [
@@ -34,6 +35,7 @@ import { RedisModule } from './redis/redis.module';
     AuthModule,
     HealthModule,
     ListingsModule,
+    ShippingModule,
   ],
   providers: [
     { provide: APP_GUARD, useClass: JwtAuthGuard },

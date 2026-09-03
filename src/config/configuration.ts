@@ -50,4 +50,12 @@ export default () => ({
   frontend: {
     url: process.env.FRONTEND_URL ?? 'http://localhost:5173',
   },
+  shipbubble: {
+    apiKey: process.env.SHIPBUBBLE_API_KEY ?? '',
+    senderName: process.env.SHIPBUBBLE_SENDER_NAME ?? 'Retunra Seller',
+    senderPhone: process.env.SHIPBUBBLE_SENDER_PHONE ?? '08000000000',
+    senderAddress: process.env.SHIPBUBBLE_SENDER_ADDRESS ?? '1 Broad Street, Marina',
+    senderCity: process.env.SHIPBUBBLE_SENDER_CITY ?? 'Lagos Island',
+    senderState: process.env.SHIPBUBBLE_SENDER_STATE ?? 'Lagos',
+  },
 });
