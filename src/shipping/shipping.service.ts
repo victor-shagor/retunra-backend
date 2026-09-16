@@ -6,13 +6,11 @@ const SHIPBUBBLE_BASE = 'https://api.shipbubble.com/v1/shipping';
 const VALIDATE_ADDRESS_URL = `${SHIPBUBBLE_BASE}/address/validate`;
 const FETCH_RATES_URL = `${SHIPBUBBLE_BASE}/fetch_rates`;
 
-// "Fashion wears" — from Shipbubble's documented example response for
-// GET /v1/shipping/labels/categories. Retunra doesn't yet map its own
-// listing categories (Clothing/Shoes/Accessories/Bags/Hair) to Shipbubble
-// category ids, so every request uses this one. Re-verify this id against
-// the live /labels/categories response once dashboard API access is enabled
-// — documented example ids aren't guaranteed to match this account's data.
-const DEFAULT_CATEGORY_ID = 98246239;
+// "Fashion wears" — id confirmed against this account's live
+// GET /v1/shipping/labels/categories response. Retunra doesn't yet map its
+// own listing categories (Clothing/Shoes/Accessories/Bags/Hair) to
+// Shipbubble category ids, so every request uses this one.
+const DEFAULT_CATEGORY_ID = 74794423;
 
 // No listing captures package dimensions yet, so every request uses a
 // fixed parcel size (cm), same spirit as the existing hardcoded 0.5kg
