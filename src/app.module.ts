@@ -8,7 +8,10 @@ import configuration from './config/configuration';
 import { getDatabaseOptions } from './database/database.config';
 import { HealthModule } from './health/health.module';
 import { ListingsModule } from './listings/listings.module';
+import { OrdersModule } from './orders/orders.module';
+import { PaymentsModule } from './payments/payments.module';
 import { RedisModule } from './redis/redis.module';
+import { ReviewsModule } from './reviews/reviews.module';
 import { ShippingModule } from './shipping/shipping.module';
 
 @Module({
@@ -35,6 +38,9 @@ import { ShippingModule } from './shipping/shipping.module';
     AuthModule,
     HealthModule,
     ListingsModule,
+    OrdersModule,
+    PaymentsModule,
+    ReviewsModule,
     ShippingModule,
   ],
   providers: [

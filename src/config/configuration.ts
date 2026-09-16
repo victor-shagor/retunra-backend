@@ -50,6 +50,10 @@ export default () => ({
   frontend: {
     url: process.env.FRONTEND_URL ?? 'http://localhost:5173',
   },
+  paystack: {
+    secretKey: process.env.PAYSTACK_SECRET_KEY ?? '',
+    publicKey: process.env.PAYSTACK_PUBLIC_KEY ?? '',
+  },
   shipbubble: {
     apiKey: process.env.SHIPBUBBLE_API_KEY ?? '',
     senderName: process.env.SHIPBUBBLE_SENDER_NAME ?? 'Retunra Seller',
