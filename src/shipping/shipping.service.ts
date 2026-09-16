@@ -80,7 +80,14 @@ export class ShippingService {
         name: this.configService.get<string>('shipbubble.senderName') ?? 'Retunra Seller',
         email: 'seller@retunra.com',
         phone: this.configService.get<string>('shipbubble.senderPhone') ?? '08000000000',
-        address: this.configService.get<string>('shipbubble.senderAddress') ?? '1 Broad Street, Marina',
+        // Shipbubble's address validator needs the full location — street,
+        // city, state and country — in this one string, not just the street.
+        address: [
+          this.configService.get<string>('shipbubble.senderAddress') ?? '1 Broad Street, Marina',
+          this.configService.get<string>('shipbubble.senderCity') ?? 'Lagos Island',
+          this.configService.get<string>('shipbubble.senderState') ?? 'Lagos',
+          'Nigeria',
+        ].join(', '),
       };
 
       // Cache the promise (not just the resolved value) so concurrent
@@ -114,7 +121,7 @@ export class ShippingService {
         name: dto.receiver.name,
         email: 'buyer@retunra.com',
         phone: dto.receiver.phone,
-        address: `${dto.receiver.address}, ${dto.receiver.city}, ${dto.receiver.state}`,
+        address: `${dto.receiver.address}, ${dto.receiver.city}, ${dto.receiver.state}, Nigeria`,
       }),
     ]);
 
