@@ -18,6 +18,11 @@ export class OrdersController {
     return this.ordersService.findMineAsBuyer(req.user.id);
   }
 
+  @Get('seller')
+  findMineAsSeller(@Request() req: { user: User }) {
+    return this.ordersService.findMineAsSeller(req.user.id);
+  }
+
   @Get(':id')
   findOne(@Request() req: { user: User }, @Param('id', ParseUUIDPipe) id: string) {
     return this.ordersService.findOneForBuyer(id, req.user.id);

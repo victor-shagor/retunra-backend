@@ -15,6 +15,10 @@ export class Review {
   @Column({ name: 'order_id' })
   orderId: string;
 
+  @ManyToOne(() => User, { onDelete: 'CASCADE' })
+  @JoinColumn({ name: 'buyer_id' })
+  buyer: User;
+
   @Column({ name: 'buyer_id' })
   buyerId: string;
 

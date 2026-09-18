@@ -12,6 +12,15 @@ export interface ReviewSummary {
   comment: string | null;
 }
 
+export interface SellerReviewView {
+  id: string;
+  orderId: string;
+  rating: number;
+  comment: string | null;
+  createdAt: Date;
+  buyerName: string;
+}
+
 @Injectable()
 export class ReviewsService {
   constructor(
@@ -51,5 +60,22 @@ export class ReviewsService {
   async findMineAsBuyer(buyerId: string): Promise<ReviewSummary[]> {
     const reviews = await this.reviewsRepository.find({ where: { buyerId } });
     return reviews.map((r) => ({ orderId: r.orderId, rating: r.rating, comment: r.comment }));
+  }
+
+  async findForSeller(sellerId: string): Promise<SellerReviewView[]> {
+    const reviews = await this.reviewsRepository.find({
+      where: { sellerId },
+      relations: { buyer: true },
+      order: { createdAt: 'DESC' },
+    });
+
+    return reviews.map((r) => ({
+      id: r.id,
+      orderId: r.orderId,
+      rating: r.rating,
+      comment: r.comment,
+      createdAt: r.createdAt,
+      buyerName: r.buyer?.fullName ?? 'A buyer',
+    }));
   }
 }

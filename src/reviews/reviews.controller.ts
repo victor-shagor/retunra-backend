@@ -16,4 +16,9 @@ export class ReviewsController {
   findMine(@Request() req: { user: User }) {
     return this.reviewsService.findMineAsBuyer(req.user.id);
   }
+
+  @Get('seller')
+  findForSeller(@Request() req: { user: User }) {
+    return this.reviewsService.findForSeller(req.user.id);
+  }
 }

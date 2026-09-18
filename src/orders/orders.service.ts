@@ -34,6 +34,23 @@ export interface OrderView {
   deliveryNote: string | null;
 }
 
+export interface SellerOrderView {
+  id: string;
+  itemName: string;
+  itemPrice: string;
+  deliveryFee: string;
+  total: string;
+  currency: string;
+  status: OrderStatus;
+  paymentStatus: PaymentStatus;
+  escrowStatus: EscrowStatus;
+  createdAt: Date;
+  updatedAt: Date;
+  listingId: string | null;
+  listingImage: string | null;
+  buyerName: string;
+}
+
 @Injectable()
 export class OrdersService {
   constructor(
@@ -156,6 +173,31 @@ export class OrdersService {
     });
 
     return orders.map((order) => this.toView(order));
+  }
+
+  async findMineAsSeller(sellerId: string): Promise<SellerOrderView[]> {
+    const orders = await this.ordersRepository.find({
+      where: { sellerId },
+      relations: { listing: true, buyer: true },
+      order: { createdAt: 'DESC' },
+    });
+
+    return orders.map((order) => ({
+      id: order.id,
+      itemName: order.itemName,
+      itemPrice: order.itemPrice,
+      deliveryFee: order.deliveryFee,
+      total: order.total,
+      currency: order.currency,
+      status: order.status,
+      paymentStatus: order.paymentStatus,
+      escrowStatus: order.escrowStatus,
+      createdAt: order.createdAt,
+      updatedAt: order.updatedAt,
+      listingId: order.listingId,
+      listingImage: order.listing?.images?.[0] ?? null,
+      buyerName: order.buyer?.fullName ?? 'A buyer',
+    }));
   }
 
   async findOneForBuyer(id: string, buyerId: string): Promise<OrderView> {
