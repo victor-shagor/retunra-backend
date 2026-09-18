@@ -1,9 +1,11 @@
-import { Injectable, InternalServerErrorException } from '@nestjs/common';
+import { Injectable, InternalServerErrorException, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { v2 as cloudinary, UploadApiResponse } from 'cloudinary';
 
 @Injectable()
 export class UploadService {
+  private readonly logger = new Logger(UploadService.name);
+
   constructor(private readonly configService: ConfigService) {
     cloudinary.config({
       cloud_name: this.configService.getOrThrow<string>('cloudinary.cloudName'),
@@ -21,6 +23,7 @@ export class UploadService {
         { folder, resource_type: 'image' },
         (error, result: UploadApiResponse | undefined) => {
           if (error || !result) {
+            this.logger.error(`Cloudinary upload failed: ${JSON.stringify(error ?? 'no result returned')}`);
             reject(new InternalServerErrorException('Image upload failed'));
             return;
           }
