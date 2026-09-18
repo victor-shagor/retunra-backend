@@ -11,6 +11,7 @@ import { User } from '../../users/entities/user.entity';
 export enum ListingStatus {
   DRAFT = 'draft',
   PUBLISHED = 'published',
+  SOLD = 'sold',
 }
 
 export enum ListingGender {

@@ -27,6 +27,10 @@ export class CreateOrderDto {
   @IsUUID()
   listingId: string;
 
+  @IsOptional()
+  @IsUUID()
+  offerId?: string;
+
   @ValidateNested()
   @Type(() => OrderReceiverDto)
   receiver: OrderReceiverDto;

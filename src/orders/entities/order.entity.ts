@@ -8,6 +8,7 @@ import {
   UpdateDateColumn,
 } from 'typeorm';
 import { Listing } from '../../listings/entities/listing.entity';
+import { Offer } from '../../offers/entities/offer.entity';
 import { User } from '../../users/entities/user.entity';
 
 export enum OrderStatus {
@@ -15,6 +16,7 @@ export enum OrderStatus {
   PROCESSING = 'processing',
   SHIPPED = 'shipped',
   DELIVERED = 'delivered',
+  DISPUTED = 'disputed',
   CANCELLED = 'cancelled',
 }
 
@@ -22,6 +24,12 @@ export enum PaymentStatus {
   PENDING = 'pending',
   PAID = 'paid',
   FAILED = 'failed',
+}
+
+export enum EscrowStatus {
+  HELD = 'held',
+  RELEASED = 'released',
+  REFUNDED = 'refunded',
 }
 
 @Entity('orders')
@@ -49,6 +57,14 @@ export class Order {
 
   @Column({ name: 'listing_id', nullable: true })
   listingId: string | null;
+
+  @ManyToOne(() => Offer, { onDelete: 'SET NULL', nullable: true })
+  @JoinColumn({ name: 'offer_id' })
+  offer: Offer | null;
+
+  // Unique — an accepted offer can only ever be converted into one order.
+  @Column({ name: 'offer_id', nullable: true, unique: true })
+  offerId: string | null;
 
   @Column({ name: 'item_name' })
   itemName: string;
@@ -106,6 +122,20 @@ export class Order {
     default: PaymentStatus.PENDING,
   })
   paymentStatus: PaymentStatus;
+
+  // Bookkeeping only for now — there's no seller payout integration
+  // (no Paystack subaccounts/transfers, no seller bank details collected),
+  // so "released" records the decision, it doesn't move real money yet.
+  @Column({
+    name: 'escrow_status',
+    type: 'enum',
+    enum: EscrowStatus,
+    default: EscrowStatus.HELD,
+  })
+  escrowStatus: EscrowStatus;
+
+  @Column({ name: 'dispute_reason', type: 'text', nullable: true })
+  disputeReason: string | null;
 
   @CreateDateColumn({ name: 'created_at' })
   createdAt: Date;

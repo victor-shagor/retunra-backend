@@ -8,6 +8,7 @@ import configuration from './config/configuration';
 import { getDatabaseOptions } from './database/database.config';
 import { HealthModule } from './health/health.module';
 import { ListingsModule } from './listings/listings.module';
+import { OffersModule } from './offers/offers.module';
 import { OrdersModule } from './orders/orders.module';
 import { PaymentsModule } from './payments/payments.module';
 import { RedisModule } from './redis/redis.module';
@@ -38,6 +39,7 @@ import { ShippingModule } from './shipping/shipping.module';
     AuthModule,
     HealthModule,
     ListingsModule,
+    OffersModule,
     OrdersModule,
     PaymentsModule,
     ReviewsModule,
