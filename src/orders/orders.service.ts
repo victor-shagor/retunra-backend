@@ -73,6 +73,30 @@ export class OrdersService {
       throw new ForbiddenException("You can't buy your own listing");
     }
 
+    // Claim (or refresh) the exclusive checkout hold right at order
+    // creation — this is the actual correctness guarantee against two
+    // buyers both ending up with a pending order for the same listing;
+    // the checkout page's own reserve calls are just an early UX signal
+    // and can't be trusted alone (client clocks, dropped requests, etc).
+    // Same atomic-UPDATE pattern as ListingsService.reserve.
+    const reserveResult = await this.listingsRepository
+      .createQueryBuilder()
+      .update(Listing)
+      .set({ reservedByUserId: buyerId, reservedUntil: new Date(Date.now() + 10 * 60_000) })
+      .where('id = :id', { id: listing.id })
+      .andWhere('status = :status', { status: ListingStatus.PUBLISHED })
+      .andWhere(
+        '(reserved_until IS NULL OR reserved_until < :now OR reserved_by_user_id = :buyerId)',
+        { now: new Date(), buyerId },
+      )
+      .execute();
+
+    if (reserveResult.affected === 0) {
+      throw new ConflictException(
+        'This item is currently being purchased by another buyer. Please try again in a few minutes.',
+      );
+    }
+
     let itemPrice = Number(listing.price);
     let offerId: string | null = null;
 

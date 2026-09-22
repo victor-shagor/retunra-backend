@@ -6,6 +6,7 @@ import {
   HttpCode,
   HttpStatus,
   Param,
+  ParseUUIDPipe,
   Patch,
   Post,
   Query,
@@ -67,6 +68,24 @@ export class ListingsController {
   @Public()
   similar(@Param('id') id: string) {
     return this.listingsService.findSimilar(id);
+  }
+
+  // ── Checkout hold (auth required) ────────────────────────────────────────
+  @Post(':id/reserve')
+  reserve(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Request() req: { user: { id: string } },
+  ) {
+    return this.listingsService.reserve(id, req.user.id);
+  }
+
+  @Post(':id/release')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  release(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Request() req: { user: { id: string } },
+  ) {
+    return this.listingsService.release(id, req.user.id);
   }
 
   @Get(':id')

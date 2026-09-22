@@ -1,4 +1,4 @@
-import { ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
+import { ConflictException, ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Not, Repository } from 'typeorm';
 import { UploadService } from '../upload/upload.service';
@@ -14,6 +14,9 @@ export interface BrowseResult {
   limit: number;
   totalPages: number;
 }
+
+// How long a checkout hold lasts before another buyer can claim it.
+export const RESERVATION_MINUTES = 10;
 
 @Injectable()
 export class ListingsService {
@@ -161,6 +164,59 @@ export class ListingsService {
     const listing = await this.findOne(id);
     if (listing.userId !== userId) throw new ForbiddenException();
     return listing;
+  }
+
+  // Claims (or refreshes) an exclusive checkout hold on a listing. Uses a
+  // single atomic UPDATE — rather than read-then-write — so two buyers
+  // reserving at nearly the same instant can't both succeed.
+  async reserve(id: string, buyerId: string): Promise<{ reservedUntil: Date }> {
+    const listing = await this.listingsRepository.findOne({ where: { id } });
+    if (!listing) throw new NotFoundException('Listing not found');
+    if (listing.userId === buyerId) {
+      throw new ForbiddenException("You can't reserve your own listing");
+    }
+
+    const now = new Date();
+    const reservedUntil = new Date(now.getTime() + RESERVATION_MINUTES * 60_000);
+
+    const result = await this.listingsRepository
+      .createQueryBuilder()
+      .update(Listing)
+      .set({ reservedByUserId: buyerId, reservedUntil })
+      .where('id = :id', { id })
+      .andWhere('status = :status', { status: ListingStatus.PUBLISHED })
+      .andWhere(
+        '(reserved_until IS NULL OR reserved_until < :now OR reserved_by_user_id = :buyerId)',
+        { now, buyerId },
+      )
+      .execute();
+
+    if (result.affected === 0) {
+      // Re-check to report the right reason: sold/removed vs. someone
+      // else's still-active hold.
+      const fresh = await this.listingsRepository.findOne({ where: { id } });
+      if (!fresh || fresh.status !== ListingStatus.PUBLISHED) {
+        throw new ConflictException('This item is no longer available.');
+      }
+      throw new ConflictException(
+        'This item is currently being purchased by another buyer. Please try again in a few minutes.',
+      );
+    }
+
+    return { reservedUntil };
+  }
+
+  // Best-effort early release (e.g. buyer navigated away from checkout).
+  // No-op if this buyer doesn't currently hold the reservation — the hold
+  // simply expires on its own otherwise, so there's nothing to error on.
+  async release(id: string, buyerId: string): Promise<void> {
+    await this.listingsRepository
+      .createQueryBuilder()
+      .update(Listing)
+      .set({ reservedByUserId: null, reservedUntil: null })
+      .where('id = :id', { id })
+      .andWhere('reserved_by_user_id = :buyerId', { buyerId })
+      .execute();
   }
 
   async update(

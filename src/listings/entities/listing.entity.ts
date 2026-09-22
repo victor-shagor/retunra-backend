@@ -82,6 +82,15 @@ export class Listing {
   @Column({ name: 'user_id' })
   userId: string;
 
+  // Checkout hold: while a buyer is on the checkout page (or has a pending
+  // order) for this listing, it's reserved so a second buyer can't also
+  // check out for it. Cleared naturally once reservedUntil passes.
+  @Column({ name: 'reserved_by_user_id', type: 'uuid', nullable: true })
+  reservedByUserId: string | null;
+
+  @Column({ name: 'reserved_until', type: 'timestamptz', nullable: true })
+  reservedUntil: Date | null;
+
   @CreateDateColumn({ name: 'created_at' })
   createdAt: Date;
 
