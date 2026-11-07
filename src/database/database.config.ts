@@ -1,5 +1,6 @@
 import { DataSourceOptions } from 'typeorm';
 import { Listing } from '../listings/entities/listing.entity';
+import { LiveCapture } from '../live-captures/entities/live-capture.entity';
 import { Offer } from '../offers/entities/offer.entity';
 import { Order } from '../orders/entities/order.entity';
 import { Review } from '../reviews/entities/review.entity';
@@ -16,6 +17,7 @@ import { AddSoldStatusToListings1781395200008 } from './migrations/1781395200008
 import { CreateOffersTable1781395200009 } from './migrations/1781395200009-CreateOffersTable';
 import { AddOfferIdToOrders1781395200010 } from './migrations/1781395200010-AddOfferIdToOrders';
 import { AddReservationToListings1781395200011 } from './migrations/1781395200011-AddReservationToListings';
+import { AddPickupAddressAndLiveCaptures1781395200012 } from './migrations/1781395200012-AddPickupAddressAndLiveCaptures';
 
 export function getDatabaseOptions(): DataSourceOptions {
   const databaseUrl = process.env.DATABASE_URL;
@@ -33,8 +35,8 @@ export function getDatabaseOptions(): DataSourceOptions {
 
   return {
     ...connection,
-    entities: [User, Listing, Order, Review, Offer],
-    migrations: [CreateUsersTable1781395200000, CreateListingsTable1781395200001, AddOAuthColumnsToUsers1781395200002, UpdateListingFields1781395200003, AddStoreNameToUsers1781395200004, CreateOrdersTable1781395200005, CreateReviewsTable1781395200006, AddEscrowAndDisputeToOrders1781395200007, AddSoldStatusToListings1781395200008, CreateOffersTable1781395200009, AddOfferIdToOrders1781395200010, AddReservationToListings1781395200011],
+    entities: [User, Listing, Order, Review, Offer, LiveCapture],
+    migrations: [CreateUsersTable1781395200000, CreateListingsTable1781395200001, AddOAuthColumnsToUsers1781395200002, UpdateListingFields1781395200003, AddStoreNameToUsers1781395200004, CreateOrdersTable1781395200005, CreateReviewsTable1781395200006, AddEscrowAndDisputeToOrders1781395200007, AddSoldStatusToListings1781395200008, CreateOffersTable1781395200009, AddOfferIdToOrders1781395200010, AddReservationToListings1781395200011, AddPickupAddressAndLiveCaptures1781395200012],
     synchronize: false,
     ssl: databaseUrl ? { rejectUnauthorized: false } : false,
   };

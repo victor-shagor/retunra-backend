@@ -1,5 +1,5 @@
 import { Transform, Type } from 'class-transformer';
-import { IsNotEmpty, IsNumber, IsString, ValidateNested } from 'class-validator';
+import { IsNotEmpty, IsNumber, IsString, IsUUID, ValidateNested } from 'class-validator';
 
 export class ReceiverDto {
   @IsString()
@@ -24,6 +24,10 @@ export class ReceiverDto {
 }
 
 export class FetchRatesDto {
+  // The listing being bought — its seller's pickup address is the origin.
+  @IsUUID()
+  listingId: string;
+
   @ValidateNested()
   @Type(() => ReceiverDto)
   receiver: ReceiverDto;

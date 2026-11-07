@@ -32,6 +32,20 @@ export class User {
   @Column({ name: 'store_name', type: 'varchar', nullable: true })
   storeName: string | null;
 
+  // Where couriers collect parcels from this seller. Required before a
+  // listing can be published.
+  @Column({ name: 'pickup_address', type: 'varchar', nullable: true })
+  pickupAddress: string | null;
+
+  @Column({ name: 'pickup_city', type: 'varchar', nullable: true })
+  pickupCity: string | null;
+
+  @Column({ name: 'pickup_state', type: 'varchar', nullable: true })
+  pickupState: string | null;
+
+  @Column({ name: 'pickup_phone', type: 'varchar', nullable: true })
+  pickupPhone: string | null;
+
   @CreateDateColumn({ name: 'created_at' })
   createdAt: Date;
 

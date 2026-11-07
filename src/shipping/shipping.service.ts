@@ -1,5 +1,9 @@
-import { Injectable, InternalServerErrorException, Logger } from '@nestjs/common';
+import { BadRequestException, Injectable, InternalServerErrorException, NotFoundException, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
+import { Listing } from '../listings/entities/listing.entity';
+import { User } from '../users/entities/user.entity';
 import { FetchRatesDto } from './dto/fetch-rates.dto';
 
 const SHIPBUBBLE_BASE = 'https://api.shipbubble.com/v1/shipping';
@@ -28,11 +32,18 @@ interface AddressDetails {
 export class ShippingService {
   private readonly logger = new Logger(ShippingService.name);
 
-  // Sender address is fixed for the whole app, so its address_code is
-  // validated once and cached rather than re-validated on every request.
-  private senderAddressCodePromise: Promise<number> | null = null;
+  // Shipbubble address codes by address, so a seller's pickup address is only
+  // validated once. The promise is cached (not the resolved value) so
+  // concurrent quotes share one validation call; failures are evicted.
+  private readonly addressCodes = new Map<string, Promise<number>>();
 
-  constructor(private readonly configService: ConfigService) {}
+  constructor(
+    private readonly configService: ConfigService,
+    @InjectRepository(Listing)
+    private readonly listingsRepository: Repository<Listing>,
+    @InjectRepository(User)
+    private readonly usersRepository: Repository<User>,
+  ) {}
 
   private getApiKey(): string {
     const rawKey = this.configService.get<string>('shipbubble.apiKey') || process.env.SHIPBUBBLE_API_KEY || '';
@@ -72,32 +83,40 @@ export class ShippingService {
     return addressCode;
   }
 
-  private getSenderAddressCode(apiKey: string): Promise<number> {
-    if (!this.senderAddressCodePromise) {
-      const details: AddressDetails = {
-        name: this.configService.get<string>('shipbubble.senderName') ?? 'Retunra Seller',
-        email: 'seller@retunra.com',
-        phone: this.configService.get<string>('shipbubble.senderPhone') ?? '08000000000',
-        // Shipbubble's address validator needs the full location — street,
-        // city, state and country — in this one string, not just the street.
-        address: [
-          this.configService.get<string>('shipbubble.senderAddress') ?? '1 Broad Street, Marina',
-          this.configService.get<string>('shipbubble.senderCity') ?? 'Lagos Island',
-          this.configService.get<string>('shipbubble.senderState') ?? 'Lagos',
-          'Nigeria',
-        ].join(', '),
-      };
-
-      // Cache the promise (not just the resolved value) so concurrent
-      // requests don't each trigger their own validation call; if it
-      // fails, clear the cache so the next request retries.
-      this.senderAddressCodePromise = this.validateAddress(apiKey, details).catch((err) => {
-        this.senderAddressCodePromise = null;
+  private getAddressCode(apiKey: string, details: AddressDetails): Promise<number> {
+    const key = [details.name, details.phone, details.address].join('|');
+    let cached = this.addressCodes.get(key);
+    if (!cached) {
+      cached = this.validateAddress(apiKey, details).catch((err) => {
+        this.addressCodes.delete(key);
         throw err;
       });
+      this.addressCodes.set(key, cached);
+    }
+    return cached;
+  }
+
+  // The origin of the parcel is the seller of the listing being bought —
+  // not a single app-wide address.
+  private async getSenderDetails(listingId: string): Promise<AddressDetails> {
+    const listing = await this.listingsRepository.findOne({ where: { id: listingId } });
+    if (!listing) throw new NotFoundException('Listing not found');
+
+    const seller = await this.usersRepository.findOne({ where: { id: listing.userId } });
+    if (!seller?.pickupAddress || !seller.pickupCity || !seller.pickupState || !seller.pickupPhone) {
+      throw new BadRequestException(
+        "This seller hasn't added a pickup address yet, so delivery can't be arranged. Please try again later.",
+      );
     }
 
-    return this.senderAddressCodePromise;
+    return {
+      name: seller.storeName ?? seller.fullName,
+      email: seller.email,
+      phone: seller.pickupPhone,
+      // Shipbubble's address validator needs the full location — street,
+      // city, state and country — in this one string.
+      address: `${seller.pickupAddress}, ${seller.pickupCity}, ${seller.pickupState}, Nigeria`,
+    };
   }
 
   private todayAsPickupDate(): string {
@@ -113,9 +132,11 @@ export class ShippingService {
       throw new InternalServerErrorException('Shipping provider is not configured');
     }
 
+    const sender = await this.getSenderDetails(dto.listingId);
+
     const [senderAddressCode, receiverAddressCode] = await Promise.all([
-      this.getSenderAddressCode(apiKey),
-      this.validateAddress(apiKey, {
+      this.getAddressCode(apiKey, sender),
+      this.getAddressCode(apiKey, {
         name: dto.receiver.name,
         email: 'buyer@retunra.com',
         phone: dto.receiver.phone,

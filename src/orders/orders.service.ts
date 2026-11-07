@@ -175,7 +175,7 @@ export class OrdersService {
       listingId: order.listingId,
       // The listing may have been deleted since purchase (FK is ON DELETE
       // SET NULL), so fall back to null rather than erroring.
-      listingImage: order.listing?.images?.[0] ?? null,
+      listingImage: order.listing?.images?.[0] ?? order.listing?.liveImages?.[0] ?? null,
       sellerId: order.sellerId,
       sellerName: order.seller?.storeName ?? order.seller?.fullName ?? 'Retunrà seller',
       courierName: order.courierName,
@@ -219,7 +219,7 @@ export class OrdersService {
       createdAt: order.createdAt,
       updatedAt: order.updatedAt,
       listingId: order.listingId,
-      listingImage: order.listing?.images?.[0] ?? null,
+      listingImage: order.listing?.images?.[0] ?? order.listing?.liveImages?.[0] ?? null,
       buyerName: order.buyer?.fullName ?? 'A buyer',
     }));
   }

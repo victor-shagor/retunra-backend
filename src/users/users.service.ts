@@ -1,7 +1,15 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
+import { PickupAddressDto } from './dto/pickup-address.dto';
 import { User } from './entities/user.entity';
+
+export interface PickupAddress {
+  address: string;
+  city: string;
+  state: string;
+  phone: string;
+}
 
 export interface OAuthProfile {
   provider: 'google' | 'facebook';
@@ -81,5 +89,27 @@ export class UsersService {
 
   findById(id: string): Promise<User | null> {
     return this.usersRepository.findOne({ where: { id } });
+  }
+
+  // Null until the seller has filled in all four fields.
+  async getPickupAddress(userId: string): Promise<PickupAddress | null> {
+    const user = await this.usersRepository.findOne({ where: { id: userId } });
+    if (!user?.pickupAddress || !user.pickupCity || !user.pickupState || !user.pickupPhone) return null;
+    return {
+      address: user.pickupAddress,
+      city: user.pickupCity,
+      state: user.pickupState,
+      phone: user.pickupPhone,
+    };
+  }
+
+  async setPickupAddress(userId: string, dto: PickupAddressDto): Promise<PickupAddress> {
+    await this.usersRepository.update(userId, {
+      pickupAddress: dto.address,
+      pickupCity: dto.city,
+      pickupState: dto.state,
+      pickupPhone: dto.phone,
+    });
+    return { address: dto.address, city: dto.city, state: dto.state, phone: dto.phone };
   }
 }

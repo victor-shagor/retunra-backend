@@ -1,5 +1,6 @@
 import { Transform } from 'class-transformer';
 import {
+  IsArray,
   IsBoolean,
   IsEnum,
   IsNotEmpty,
@@ -53,4 +54,13 @@ export class CreateListingDto {
   @IsEnum(ListingStatus)
   @IsOptional()
   status?: ListingStatus;
+
+  // Tokens from completed live-capture sessions. The server swaps these for
+  // the stored image URLs (multipart sends a lone value as a string, so
+  // normalise to an array first).
+  @Transform(({ value }) => (value === undefined || value === '' ? undefined : Array.isArray(value) ? value : [value]))
+  @IsArray()
+  @IsString({ each: true })
+  @IsOptional()
+  liveCaptureTokens?: string[];
 }

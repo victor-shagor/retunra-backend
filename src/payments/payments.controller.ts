@@ -70,14 +70,27 @@ export class PaymentsController {
       return { received: false };
     }
 
-    const event = req.body as { event?: string; data?: { reference?: string } };
+    const event = req.body as {
+      event?: string;
+      data?: { reference?: string; amount?: number; currency?: string };
+    };
 
     if (event.event === 'charge.success' && event.data?.reference) {
       const order = await this.ordersService.findByReference(event.data.reference);
-      if (order) {
-        await this.ordersService.markPaid(order);
-      } else {
+      if (!order) {
         this.logger.warn(`Webhook charge.success for unknown reference: ${event.data.reference}`);
+      } else {
+        // The popup's amount is set in the browser, so what was actually
+        // charged has to match what the order is worth — same check as
+        // /payments/verify. Still answer 200 so Paystack doesn't retry.
+        const expectedKobo = Math.round(Number(order.total) * 100);
+        if (event.data.amount !== expectedKobo || event.data.currency !== order.currency) {
+          this.logger.warn(
+            `Webhook amount mismatch for ${event.data.reference}: paid ${event.data.amount} ${event.data.currency}, expected ${expectedKobo} ${order.currency} — order NOT marked paid`,
+          );
+        } else {
+          await this.ordersService.markPaid(order);
+        }
       }
     }
 

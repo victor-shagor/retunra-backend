@@ -8,6 +8,7 @@ import configuration from './config/configuration';
 import { getDatabaseOptions } from './database/database.config';
 import { HealthModule } from './health/health.module';
 import { ListingsModule } from './listings/listings.module';
+import { LiveCapturesModule } from './live-captures/live-captures.module';
 import { OffersModule } from './offers/offers.module';
 import { OrdersModule } from './orders/orders.module';
 import { PaymentsModule } from './payments/payments.module';
@@ -39,6 +40,7 @@ import { ShippingModule } from './shipping/shipping.module';
     AuthModule,
     HealthModule,
     ListingsModule,
+    LiveCapturesModule,
     OffersModule,
     OrdersModule,
     PaymentsModule,

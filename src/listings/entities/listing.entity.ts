@@ -76,6 +76,11 @@ export class Listing {
   @Column({ type: 'text', array: true, default: '{}' })
   images: string[];
 
+  // Camera-only photos taken through the live-capture flow. Each one has
+  // "LIVE" burned into the image at upload time.
+  @Column({ name: 'live_images', type: 'text', array: true, default: '{}' })
+  liveImages: string[];
+
   @ManyToOne(() => User, { onDelete: 'CASCADE' })
   user: User;
 

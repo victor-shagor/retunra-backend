@@ -1,7 +1,9 @@
-import { ConflictException, ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
+import { BadRequestException, ConflictException, ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Not, Repository } from 'typeorm';
+import { LiveCapturesService } from '../live-captures/live-captures.service';
 import { UploadService } from '../upload/upload.service';
+import { UsersService } from '../users/users.service';
 import { BrowseListingsDto, BrowseSort } from './dto/browse-listings.dto';
 import { CreateListingDto } from './dto/create-listing.dto';
 import { UpdateListingDto } from './dto/update-listing.dto';
@@ -24,21 +26,46 @@ export class ListingsService {
     @InjectRepository(Listing)
     private readonly listingsRepository: Repository<Listing>,
     private readonly uploadService: UploadService,
+    private readonly liveCapturesService: LiveCapturesService,
+    private readonly usersService: UsersService,
   ) {}
+
+  // Drafts can be saved half-finished; going live needs a live photo (so
+  // buyers can trust the item is real) and a pickup address (so a courier
+  // knows where to collect it). Checked before any tokens are consumed or
+  // images uploaded, so a rejected publish doesn't burn anything.
+  private async assertCanPublish(userId: string, liveImageCount: number): Promise<void> {
+    if (liveImageCount < 1) {
+      throw new BadRequestException('Add at least one live photo taken with your camera before publishing.');
+    }
+    if (!(await this.usersService.getPickupAddress(userId))) {
+      throw new BadRequestException('Add your pickup address before publishing so couriers know where to collect the item.');
+    }
+  }
 
   async create(
     userId: string,
     dto: CreateListingDto,
     files: Express.Multer.File[],
   ): Promise<Listing> {
+    const { liveCaptureTokens, ...fields } = dto;
+    const status = dto.status ?? ListingStatus.DRAFT;
+    const tokens = liveCaptureTokens ?? [];
+
+    if (status === ListingStatus.PUBLISHED) {
+      await this.assertCanPublish(userId, tokens.length);
+    }
+
+    const liveImages = await this.liveCapturesService.claim(userId, tokens);
     const imageUrls = files.length
       ? await this.uploadService.uploadImages(files)
       : [];
 
     const listing = this.listingsRepository.create({
-      ...dto,
-      status: dto.status ?? ListingStatus.DRAFT,
+      ...fields,
+      status,
       images: imageUrls,
+      liveImages,
       userId,
     });
 
@@ -226,14 +253,25 @@ export class ListingsService {
     files: Express.Multer.File[],
   ): Promise<Listing> {
     const listing = await this.findOneOwned(id, userId);
+    const { liveCaptureTokens, ...fields } = dto;
+    const tokens = liveCaptureTokens ?? [];
 
+    const goingLive = fields.status === ListingStatus.PUBLISHED && listing.status !== ListingStatus.PUBLISHED;
+    if (goingLive) {
+      await this.assertCanPublish(userId, listing.liveImages.length + tokens.length);
+    }
+
+    const newLiveImages = await this.liveCapturesService.claim(userId, tokens);
     const newImageUrls = files.length
       ? await this.uploadService.uploadImages(files)
       : [];
 
-    Object.assign(listing, dto);
+    Object.assign(listing, fields);
     if (newImageUrls.length) {
       listing.images = [...listing.images, ...newImageUrls];
+    }
+    if (newLiveImages.length) {
+      listing.liveImages = [...listing.liveImages, ...newLiveImages];
     }
 
     return this.listingsRepository.save(listing);
