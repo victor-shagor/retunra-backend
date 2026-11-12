@@ -68,6 +68,9 @@ export class ShippingService {
 
     const body = await res.json().catch(() => ({}));
 
+    this.logger.log(`Shipbubble validate_address request: ${JSON.stringify(details)}`);
+    this.logger.log(`Shipbubble validate_address response: status=${res.status}, body=${JSON.stringify(body)}`);
+
     if (!res.ok) {
       this.logger.warn(`Shipbubble address validation failed: status=${res.status}, body=${JSON.stringify(body)}`);
       throw new InternalServerErrorException(
@@ -110,13 +113,24 @@ export class ShippingService {
     }
 
     return {
-      name: seller.storeName ?? seller.fullName,
+      name: this.toContactName(seller.fullName, seller.storeName),
       email: seller.email,
       phone: seller.pickupPhone,
       // Shipbubble's address validator needs the full location — street,
       // city, state and country — in this one string.
       address: `${seller.pickupAddress}, ${seller.pickupCity}, ${seller.pickupState}, Nigeria`,
     };
+  }
+
+  // Shipbubble rejects contact names with digits/symbols or a single word
+  // ("Please provide a full name (e.g John Doe)"). Prefer a real person name,
+  // strip anything that isn't a letter, and pad to two words if needed.
+  private toContactName(...candidates: Array<string | null | undefined>): string {
+    const clean = (v?: string | null) =>
+      (v ?? '').replace(/[^\p{L}\s'-]/gu, ' ').replace(/\s+/g, ' ').trim();
+    const names = candidates.map(clean).filter(Boolean);
+    const best = names.find((n) => n.split(' ').length >= 2) ?? names[0] ?? 'Retunra Seller';
+    return best.split(' ').length >= 2 ? best : `${best} Retunra`;
   }
 
   private todayAsPickupDate(): string {
@@ -137,7 +151,7 @@ export class ShippingService {
     const [senderAddressCode, receiverAddressCode] = await Promise.all([
       this.getAddressCode(apiKey, sender),
       this.getAddressCode(apiKey, {
-        name: dto.receiver.name,
+        name: this.toContactName(dto.receiver.name),
         email: 'buyer@retunra.com',
         phone: dto.receiver.phone,
         address: `${dto.receiver.address}, ${dto.receiver.city}, ${dto.receiver.state}, Nigeria`,
@@ -162,6 +176,8 @@ export class ShippingService {
     };
 
     this.logger.log(`Calling Shipbubble fetch_rates → sender_address_code=${senderAddressCode}, reciever_address_code=${receiverAddressCode}`);
+
+    this.logger.log(`Shipbubble fetch_rates request: ${JSON.stringify(payload)}`);
 
     let res: Response;
     try {
